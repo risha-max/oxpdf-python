@@ -1,0 +1,11 @@
+LICENSE
+README.md
+pyproject.toml
+oxpdf/__init__.py
+oxpdf/client.py
+oxpdf/py.typed
+oxpdf.egg-info/PKG-INFO
+oxpdf.egg-info/SOURCES.txt
+oxpdf.egg-info/dependency_links.txt
+oxpdf.egg-info/requires.txt
+oxpdf.egg-info/top_level.txt
