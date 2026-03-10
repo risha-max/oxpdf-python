@@ -1,6 +1,6 @@
 # oxpdf
 
-Python SDK for the [0xPdf](https://0xpdf.com) PDF-to-JSON API.
+Python SDK for the [0xPdf](https://0xpdf.io) PDF-to-JSON API.
 
 ## Installation
 
@@ -56,7 +56,7 @@ except FileNotFoundError:
 ### Client
 
 ```python
-Client(api_key, base_url="https://api.0xpdf.com/api/v1")
+Client(api_key, base_url="https://api.0xpdf.io/api/v1")
 ```
 
 ### PDF Parsing

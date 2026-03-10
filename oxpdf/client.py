@@ -19,7 +19,7 @@ class OxPDFError(Exception):
 class Client:
     """Sync client for the 0xPdf PDF-to-JSON API."""
 
-    def __init__(self, api_key: str, base_url: str = "https://api.0xpdf.com/api/v1"):
+    def __init__(self, api_key: str, base_url: str = "https://api.0xpdf.io/api/v1"):
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self._session = requests.Session()
