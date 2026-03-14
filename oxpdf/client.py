@@ -1,6 +1,7 @@
 """0xPdf API client."""
 
 import json
+import time
 from pathlib import Path
 from typing import Any, Generator
 
@@ -19,11 +20,25 @@ class OxPDFError(Exception):
 class Client:
     """Sync client for the 0xPdf PDF-to-JSON API."""
 
-    def __init__(self, api_key: str, base_url: str = "https://api.0xpdf.io/api/v1"):
+    def __init__(
+        self,
+        api_key: str,
+        base_url: str = "https://api.0xpdf.io/api/v1",
+        timeout: int = 120,
+        max_retries: int = 2,
+        retry_delay: float = 0.5,
+        backoff_multiplier: float = 2.0,
+        retry_status_codes: tuple[int, ...] = (429, 500, 502, 503, 504),
+    ):
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self._session = requests.Session()
         self._session.headers["X-API-Key"] = api_key
+        self.timeout = timeout
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
+        self.backoff_multiplier = backoff_multiplier
+        self.retry_status_codes = retry_status_codes
 
     # ── internal helpers ────────────────────────────────────────────
 
@@ -41,41 +56,53 @@ class Client:
         data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         url = self._url(path)
-        try:
-            resp = self._session.request(
-                method,
-                url,
-                params=params,
-                json=json_body,
-                files=files,
-                data=data,
-                timeout=120,
-            )
-        except requests.RequestException as e:
-            raise OxPDFError(str(e)) from e
-
-        if resp.status_code == 204:
-            return {}
-
-        if not resp.ok:
+        for attempt in range(self.max_retries + 1):
             try:
-                body = resp.json()
-                detail = body.get("detail", body.get("error", resp.text))
-                if isinstance(detail, list):
-                    detail = "; ".join(str(d.get("msg", d)) for d in detail)
-                elif not isinstance(detail, str):
-                    detail = str(detail)
-            except Exception:
-                detail = resp.text or resp.reason or f"HTTP {resp.status_code}"
-            raise OxPDFError(
-                detail,
-                status_code=resp.status_code,
-                response_body=resp.text,
-            )
+                resp = self._session.request(
+                    method,
+                    url,
+                    params=params,
+                    json=json_body,
+                    files=files,
+                    data=data,
+                    timeout=self.timeout,
+                )
+            except requests.RequestException as e:
+                if attempt < self.max_retries:
+                    delay = self.retry_delay * (self.backoff_multiplier**attempt)
+                    time.sleep(delay)
+                    continue
+                raise OxPDFError(str(e)) from e
 
-        if not resp.content:
-            return {}
-        return resp.json()
+            if resp.status_code in self.retry_status_codes and attempt < self.max_retries:
+                delay = self.retry_delay * (self.backoff_multiplier**attempt)
+                time.sleep(delay)
+                continue
+
+            if resp.status_code == 204:
+                return {}
+
+            if not resp.ok:
+                try:
+                    body = resp.json()
+                    detail = body.get("detail", body.get("error", resp.text))
+                    if isinstance(detail, list):
+                        detail = "; ".join(str(d.get("msg", d)) for d in detail)
+                    elif not isinstance(detail, str):
+                        detail = str(detail)
+                except Exception:
+                    detail = resp.text or resp.reason or f"HTTP {resp.status_code}"
+                raise OxPDFError(
+                    detail,
+                    status_code=resp.status_code,
+                    response_body=resp.text,
+                )
+
+            if not resp.content:
+                return {}
+            return resp.json()
+
+        raise OxPDFError("Request failed after retries")
 
     def _upload_pdf(
         self,
@@ -234,6 +261,28 @@ class Client:
     def job_status(self, job_id: str) -> dict[str, Any]:
         """Poll the status of an async PDF processing job."""
         return self._request("GET", f"pdf/status/{job_id}")
+
+    def wait_for_job(
+        self,
+        job_id: str,
+        *,
+        interval_seconds: float = 2.0,
+        timeout_seconds: float = 120.0,
+    ) -> dict[str, Any]:
+        """
+        Poll until a job reaches a terminal state (completed/failed) or timeout.
+        """
+        start = time.time()
+        while True:
+            status = self.job_status(job_id)
+            current = status.get("status")
+            if current in ("completed", "failed"):
+                return status
+            if time.time() - start > timeout_seconds:
+                raise OxPDFError(
+                    f"Timed out waiting for job {job_id} after {timeout_seconds}s"
+                )
+            time.sleep(interval_seconds)
 
     # ── PDF validation ──────────────────────────────────────────────
 

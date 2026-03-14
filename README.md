@@ -5,7 +5,7 @@ Python SDK for the [0xPdf](https://0xpdf.io) PDF-to-JSON API.
 ## Installation
 
 ```bash
-pip install oxpdf
+pip install "oxpdf @ git+https://github.com/risha-max/oxpdf-python.git@main"
 ```
 
 ## Quick Start
@@ -34,6 +34,15 @@ for event in client.parse_stream("large.pdf", schema_template="invoice"):
         print(f"Progress: {event['data'].get('message')}")
     elif event["event"] == "complete":
         print("Done!", event["data"])
+
+# Queue async processing and wait for completion
+queued = client.upload("invoice.pdf", schema_id="your_schema_id")
+status = client.wait_for_job(
+    queued["job_id"],
+    interval_seconds=2.0,
+    timeout_seconds=180.0,
+)
+print(status["status"])
 ```
 
 ## Error Handling
@@ -56,7 +65,14 @@ except FileNotFoundError:
 ### Client
 
 ```python
-Client(api_key, base_url="https://api.0xpdf.io/api/v1")
+Client(
+  api_key,
+  base_url="https://api.0xpdf.io/api/v1",
+  timeout=120,
+  max_retries=2,
+  retry_delay=0.5,
+  backoff_multiplier=2.0
+)
 ```
 
 ### PDF Parsing
@@ -73,6 +89,7 @@ Client(api_key, base_url="https://api.0xpdf.io/api/v1")
 |---|---|
 | `upload(file_path, *, schema_id, schema_name, use_ocr, ocr_engine)` | Queue PDF for background processing |
 | `job_status(job_id)` | Poll async job status |
+| `wait_for_job(job_id, *, interval_seconds, timeout_seconds)` | Poll until `completed`/`failed` |
 
 ### Image Extraction
 
