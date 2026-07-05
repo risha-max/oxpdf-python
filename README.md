@@ -2,6 +2,14 @@
 
 Python SDK for the [0xPdf](https://0xpdf.io) PDF-to-JSON API.
 
+## Demo
+
+Schema in, PDF in, JSON out — **22 seconds**:
+
+![0xPdf product demo](https://0xpdf.io/media/social-promo.gif)
+
+[Full MP4](https://0xpdf.io/media/social-promo.mp4) · [Try free](https://0xpdf.io/samples) · [API docs](https://0xpdf.io/docs#sdks)
+
 ## Installation
 
 ```bash
