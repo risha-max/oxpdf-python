@@ -8,7 +8,7 @@ Schema in, PDF in, JSON out — **22 seconds**:
 
 ![0xPdf product demo](https://0xpdf.io/media/social-promo.gif)
 
-[Full MP4](https://0xpdf.io/media/social-promo.mp4) · [Try free](https://0xpdf.io/samples) · [API docs](https://0xpdf.io/docs#sdks)
+[Full MP4](https://0xpdf.io/media/social-promo.mp4) · [Try free](https://0xpdf.io/samples?utm_source=github&utm_medium=readme&utm_campaign=oxpdf-python) · [API docs](https://0xpdf.io/docs#sdks)
 
 ## Installation
 
