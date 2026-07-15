@@ -10,6 +10,18 @@ Schema in, PDF in, JSON out — **22 seconds**:
 
 [Full MP4](https://0xpdf.io/media/social-promo.mp4) · [Try free](https://0xpdf.io/samples?utm_source=github&utm_medium=readme&utm_campaign=oxpdf-python) · [API docs](https://0xpdf.io/docs#sdks)
 
+
+## MCP (AI agents)
+
+Use the dedicated MCP server so Claude / Cursor can parse PDFs into your JSON schema:
+
+```bash
+pip install oxpdf-mcp
+# or: uvx oxpdf-mcp
+```
+
+Repo + Cursor config: [risha-max/0xpdf-mcp](https://github.com/risha-max/0xpdf-mcp) · Docs: [0xpdf.io/docs#mcp](https://0xpdf.io/docs#mcp)
+
 ## Installation
 
 ```bash
